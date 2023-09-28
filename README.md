@@ -1,4 +1,4 @@
-# pickpack
+# Pickpack
 
 [![ci](https://github.com/anafvana/pickpack/actions/workflows/ci.yml/badge.svg)](https://github.com/anafvana/pickpack/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/pickpack.svg)](https://badge.fury.io/py/pickpack)
@@ -6,32 +6,33 @@
 
 **pickpack** is a small python library based on [wong2's pick](https://github.com/wong2/pick) which allows you to create a curses-based interactive selection tree in the terminal.
 
-![Demo](https://github.com/anafvana/pick/raw/master/example/basic.gif)
+![Demo](./example/basic.gif)
 
 It was made with installation processes in mind, so that a user can select a parent node and get all children elements included. Different configurations allow for different outputs.
 
 ## Installation
 
-    $ pip install pickpack
+> pip install pickpack
 
 ## Options
 
-- `options`: a RenderTree (anytree) or a list of options (if using list, `options_map_func` MUST be included)
+- `options`: a RenderTree (anytree) or a list of options
 - `title`: (optional) a title displayed above the options list
 - `root_name`: (optional) name of root ("select all") node; defaults to root-node's value
 - `multiselect`: (optional) if true, it is possible to select multiple values by hitting SPACE; defaults to `False`
 - `singleselect_output_include_children`: (optional) if true, output in singleselect will include all children of the selected node, as well as the node itself; defaults to `False`
 - `output_leaves_only`: (optional) if true, only leaf (childless) nodes will be returned; **for singleselect mode, `singleselect_output_include_children` MUST be True**; defaults to `False`
-- `output_format`: (optional) allows for customising output format. 'nodeindex' = `[(Node('name'), index)]`; 'nameindex' = `[('name', index)]`; 'nodeonly' = `[Node('name')]`; 'nameonly' = `['name']`; default is 'nodeindex'
+- `output_format`: (optional) allows for customising output format. nodeindex = `[(Node('name'), index)]`; nameindex = `[('name', index)]`; nodeonly = `[Node('name')]`; nameonly = `['name']`; default is nodeindex
 - `indicator`: (optional) custom the selection indicator
-- `indicator_parentheses`: (optional) include/remove parentheses around selection indicator; defaults to `True`
+- `indicator_parentheses`: (optional) include/remove parentheses around selection indicator; defaults to `("(", ")")`
 - `default_index`: (optional) defines at which line the indicator will be placed when the program is started; default is `0` (first line)
-- `options_map_func`: (optional for multiselect) a mapping function to pass each option through before displaying. Must return `Node`
+- `options_map_function`: (optional) a mapping function to pass each option through before displaying. Must return `Node`
 
 ## Usage
 
 **pickpack** can be used by creating a tree and passing it into pickpack:
 
+```python
     from anytree import Node, RenderTree
     from pickpack import pickpack
 
@@ -44,14 +45,15 @@ It was made with installation processes in mind, so that a user can select a par
     options = RenderTree(p1)
     option, index = pickpack(options, title)
     print(option, index)
+```
 
 **outputs**:
 
-    Node('/parent/child1', index=1)
-    1
+> Node('/parent/child1', index=1) 1
 
 **pickpack** multiselect example returning node-name and index:
 
+```python
     from anytree import Node, RenderTree
     from pickpack import pickpack
 
@@ -62,8 +64,9 @@ It was made with installation processes in mind, so that a user can select a par
     p1 = Node('parent', children=[c1,c2])
 
     options = RenderTree(p1)
-    option, index = pickpack(options, title, multiselect=True, min_selection_count=1, output_format='nameindex')
+    option, index = pickpack(options, title, multiselect=True, min_selection_count=1, output_format=OutputMode.nameindex)
     print(option, index)
+```
 
 **outputs**:
 
@@ -73,6 +76,7 @@ It was made with installation processes in mind, so that a user can select a par
 
 To register custom handlers for specific keyboard keypresses, you can use the `register_custom_handler` property:
 
+```python
     from anytree import Node, RenderTree
     from pickpack import PickPacker
 
@@ -83,14 +87,17 @@ To register custom handlers for specific keyboard keypresses, you can use the `r
     options = RenderTree(p1)
 
     picker = PickPacker(options, title)
-    def go_back(picker):
+    
+    def go_back(picker: PickPacker) -> tuple[Node, int] | None:
          return None, -1
-    picker.register_custom_handler(ord('h'),  go_back)
+    
+    picker.register_custom_handler(ord('h'), go_back)
     option, index = picker.start()
+```
 
 - the custom handler will be called with the `picker` instance as its parameter.
 - the custom handler should either return a two-element `tuple` or `None`.
-- if `None` is returned, the picker would continue to run; otherwise the picker will stop and return the tuple.
+- if `None` is returned, the picker would continue to run. Otherwise the picker will stop and return the tuple.
 
 ### Options Map Function
 
@@ -104,6 +111,7 @@ You may also store any additional information as a custom property within the no
 
 **pickpack** options map function example:
 
+```python
     from anytree import Node, RenderTree
     from pickpack import pickpack
 
@@ -117,25 +125,29 @@ You may also store any additional information as a custom property within the no
     def get_node(option):
         return Node(option.get('label'), abbreviation=option.get('abbreviation'))
 
-    picker = PickPacker(options, title, indicator='*', options_map_func=get_node, output_format='nameindex')
+    picker = PickPacker(options, title, indicator='*', options_map_function=get_node, output_format='nameindex')
+```
 
 **displays**:
 
+```python
     Please choose an option:
 
     (*) Select all
-    ( )    └── option1
-    ( )    └── option2
+    ( )    ├── option1
+    ( )    ├── option2
     ( )    └── option3
+```
 
 **outputs**:
 
-    >>> ({ 'label': 'option1' }, 0)
+> ({ 'label': 'option1' }, 0)
 
 #### Map function for nested lists
 
 **pickpack** options map function example for lists with **nesting**:
 
+```python
     from anytree import Node, RenderTree
     from pickpack import pickpack
 
@@ -158,14 +170,17 @@ You may also store any additional information as a custom property within the no
         else:
             return Node(option.get('label'), children=None, abbreviation=option.get('abbreviation'))
 
-    picker = PickPacker(options, title, indicator='*', options_map_func=get_node, output_format='nameindex')
+    picker = PickPacker(options, title, indicator='*', options_map_function=get_node, output_format='nameindex')
+```
 
 **displays**:
 
+```python
     Please choose an option:
 
     (*) Select all
-    ( )    └── option1
-    ( )           └── option1.1
-    ( )    └── option2
+    ( )    ├── option1
+    ( )    │      └── option1.1
+    ( )    ├── option2
     ( )    └── option3
+```

@@ -12,7 +12,9 @@ It was made with installation processes in mind, so that a user can select a par
 
 ## Installation
 
-> pip install pickpack
+```console
+pip install pickpack
+```
 
 ## Options
 
@@ -33,66 +35,70 @@ It was made with installation processes in mind, so that a user can select a par
 **pickpack** can be used by creating a tree and passing it into pickpack:
 
 ```python
-    from anytree import Node, RenderTree
-    from pickpack import pickpack
+from anytree import Node, RenderTree
+from pickpack import pickpack
 
-    title = 'Please choose one: '
+title = 'Please choose one: '
 
-    c1 = Node('child1')
-    c2 = Node('child2')
-    p1 = Node('parent', children=[c1,c2])
+c1 = Node('child1')
+c2 = Node('child2')
+p1 = Node('parent', children=[c1,c2])
 
-    options = RenderTree(p1)
-    option, index = pickpack(options, title)
-    print(option, index)
+options = RenderTree(p1)
+option, index = pickpack(options, title)
+print(option, index)
 ```
 
 **outputs**:
 
-> Node('/parent/child1', index=1) 1
+```console
+Node('/parent/child1', index=1) 1
+```
 
 **pickpack** multiselect example returning node-name and index:
 
 ```python
-    from anytree import Node, RenderTree
-    from pickpack import pickpack
+from anytree import Node, RenderTree
+from pickpack import pickpack
 
-    title = 'Please choose one: '
+title = 'Please choose one: '
 
-    c1 = Node('child1')
-    c2 = Node('child2')
-    p1 = Node('parent', children=[c1,c2])
+c1 = Node('child1')
+c2 = Node('child2')
+p1 = Node('parent', children=[c1,c2])
 
-    options = RenderTree(p1)
-    option, index = pickpack(options, title, multiselect=True, min_selection_count=1, output_format=OutputMode.nameindex)
-    print(option, index)
+options = RenderTree(p1)
+option, index = pickpack(options, title, multiselect=True, min_selection_count=1, output_format=OutputMode.nameindex)
+print(option, index)
 ```
 
 **outputs**:
 
-    [('child1', 1), ('child2', 2)]
+```console
+[('child1', 1), ('child2', 2)]
+```
 
 ### Register custom handlers
 
 To register custom handlers for specific keyboard keypresses, you can use the `register_custom_handler` property:
 
 ```python
-    from anytree import Node, RenderTree
-    from pickpack import PickPacker
+from anytree import Node, RenderTree
+from pickpack import PickPacker
 
-    title = 'Please choose one: '
-    c1 = Node('child1')
-    c2 = Node('child2')
-    p1 = Node('parent', children=[c1,c2])
-    options = RenderTree(p1)
+title = 'Please choose one: '
+c1 = Node('child1')
+c2 = Node('child2')
+p1 = Node('parent', children=[c1,c2])
+options = RenderTree(p1)
 
-    picker = PickPacker(options, title)
+picker = PickPacker(options, title)
     
-    def go_back(picker: PickPacker) -> tuple[Node, int] | None:
-         return None, -1
+def go_back(picker: PickPacker) -> tuple[Node, int] | None:
+     return None, -1
     
-    picker.register_custom_handler(ord('h'), go_back)
-    option, index = picker.start()
+picker.register_custom_handler(ord('h'), go_back)
+option, index = picker.start()
 ```
 
 - the custom handler will be called with the `picker` instance as its parameter.
@@ -112,75 +118,77 @@ You may also store any additional information as a custom property within the no
 **pickpack** options map function example:
 
 ```python
-    from anytree import Node, RenderTree
-    from pickpack import pickpack
+from anytree import Node, RenderTree
+from pickpack import pickpack
 
-    title = 'Please choose an option: '
-    options = [
-        {'label': 'option1', 'abbreviation': 'op1'},
-        {'label': 'option2', 'abbreviation': 'op2'},
-        {'label': 'option3', 'abbreviation': 'op3'}
-    ]
+title = 'Please choose an option: '
+options = [
+    {'label': 'option1', 'abbreviation': 'op1'},
+    {'label': 'option2', 'abbreviation': 'op2'},
+    {'label': 'option3', 'abbreviation': 'op3'}
+]
 
-    def get_node(option):
-        return Node(option.get('label'), abbreviation=option.get('abbreviation'))
+def get_node(option):
+    return Node(option.get('label'), abbreviation=option.get('abbreviation'))
 
-    picker = PickPacker(options, title, indicator='*', options_map_function=get_node, output_format='nameindex')
+picker = PickPacker(options, title, indicator='*', options_map_function=get_node, output_format='nameindex')
 ```
 
 **displays**:
 
-```python
-    Please choose an option:
+```console
+Please choose an option:
 
-    (*) Select all
-    ( )    ├── option1
-    ( )    ├── option2
-    ( )    └── option3
+(*) Select all
+( )    ├── option1
+( )    ├── option2
+( )    └── option3
 ```
 
 **outputs**:
 
-> ({ 'label': 'option1' }, 0)
+```console
+({ 'label': 'option1' }, 0)
+```
 
 #### Map function for nested lists
 
 **pickpack** options map function example for lists with **nesting**:
 
 ```python
-    from anytree import Node, RenderTree
-    from pickpack import pickpack
+from anytree import Node, RenderTree
+from pickpack import pickpack
 
-    title = 'Please choose an option: '
-    options = [
-        {'label': 'option1', 'abbreviation': 'op1', 'children':
-            [{'label': 'option1.1', 'abbreviation': 'op1.1',}]
-        },
-        {'label': 'option2', 'abbreviation': 'op2'},
-        {'label': 'option3', 'abbreviation': 'op3'}
-    ]
+title = 'Please choose an option: '
+options = [
+    {'label': 'option1', 'abbreviation': 'op1', 'children':
+        [{'label': 'option1.1', 'abbreviation': 'op1.1',}]
+    },
+    {'label': 'option2', 'abbreviation': 'op2'},
+    {'label': 'option3', 'abbreviation': 'op3'}
+]
 
-    def get_node(option):
-        children = option.get('children')
-        if children is not None:
-            children_list: list[Node] = []
-            for child in children:
-                children_list.append(get_nodes(child))
-            return Node(option.get('label'), children=children_list, abbreviation=option.get('abbreviation'))
-        else:
-            return Node(option.get('label'), children=None, abbreviation=option.get('abbreviation'))
+def get_node(option):
+    children = option.get('children')
+    if children is not None:
+        children_list: list[Node] = []
+        for child in children:
+            children_list.append(get_nodes(child))
+        return Node(option.get('label'), children=children_list, abbreviation=option.get('abbreviation'))
+    else:
+        return Node(option.get('label'), children=None, abbreviation=option.get('abbreviation'))
 
-    picker = PickPacker(options, title, indicator='*', options_map_function=get_node, output_format='nameindex')
+picker = PickPacker(options, title, indicator='*', options_map_function=get_node, output_format='nameindex')
 ```
 
 **displays**:
 
-```python
-    Please choose an option:
+```console
+Please choose an option:
 
-    (*) Select all
-    ( )    ├── option1
-    ( )    │      └── option1.1
-    ( )    ├── option2
-    ( )    └── option3
+(*) Select all
+( )    ├── option1
+( )    │      └── option1.1
+( )    ├── option2
+( )    └── option3
 ```

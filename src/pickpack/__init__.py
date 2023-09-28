@@ -39,11 +39,11 @@ class PickPacker:
     :param multiselect: (optional) if true its possible to select multiple values by hitting SPACE; defaults to False
     :param singleselect_output_include_children: (optional) if true, output will include all children of the selected node, as well as the node itself; defaults to False
     :param output_leaves_only: (optional) if true, only leaf nodes will be returned; for singleselect mode, singleselect_output_include_children MUST be True; defaults to False
-    :param output_format: (optional) allows for customising output format. "nodeindex" = [(Node('name'), index)]; "nameindex" = [('name', index)]; "nodeonly" = [Node('name')]; "nameonly" = ['name']; default is "nodeindex"
+    :param output_format: (optional) allows for customising output format. nodeindex = [(Node('name'), index)]; nameindex = [('name', index)]; nodeonly = [Node('name')]; nameonly = ['name']; default is nodeindex
     :param indicator: (optional) custom the selection indicator
     :param indicator_parentheses: (optional) include/remove parentheses around selection indicator; defaults to ("(", ")")
     :param default_index: (optional) set this if the default selected option is not the first one
-    :param options_map_func: (optional) a mapping function to pass each option through before displaying
+    :param options_map_function: (optional) a mapping function to pass each option through before displaying
     """
 
     options: RenderTree | list[Any]
@@ -56,8 +56,8 @@ class PickPacker:
     min_selection_count: int = 0
     singleselect_output_include_children: bool = False
     output_leaves_only: bool = False
-    output_format: str = "nodeindex"
-    options_map_func: Callable[[Any], Node] = lambda object: Node(object)
+    output_format: OutputMode = OutputMode.nodeindex
+    options_map_function: Callable[[Any], Node] = lambda object: Node(object)
     all_selected: list[str] = field(init=False, default_factory=list)
     custom_handlers: dict[str, Callable[[PickPacker], tuple[Node, int] | None]] = field(
         init=False, default_factory=dict
@@ -81,13 +81,13 @@ class PickPacker:
         if self.multiselect and self.min_selection_count > optnr:
             raise ValueError('min_selection_count is bigger than the available options, you will not be able to make any selection')
 
-        # Check for correct options_map_func and build tree
-        if self.options_map_func is None and isinstance(self.options, list):
-            raise Exception('options_map_func that maps list items to Node objects is required when passing options of type list')
-        elif self.options_map_func is not None and not callable(self.options_map_func):
-            raise TypeError('options_map_func must be a callable function')
-        elif self.options_map_func is not None and callable(self.options_map_func) and isinstance(self.options, list):
-            opts = [self.options_map_func(opt) for opt in self.options]
+        # Check for correct options_map_function and build tree
+        if self.options_map_function is None and isinstance(self.options, list):
+            raise Exception('options_map_function that maps list items to Node objects is required when passing options of type list')
+        elif self.options_map_function is not None and not callable(self.options_map_function):
+            raise TypeError('options_map_function must be a callable function')
+        elif self.options_map_function is not None and callable(self.options_map_function) and isinstance(self.options, list):
+            opts = [self.options_map_function(opt) for opt in self.options]
             if len(opts) > 1:
                 root = Node("Select all", children=opts)
             else:
@@ -100,13 +100,13 @@ class PickPacker:
             self.options.node.name = self.root_name
 
         # Define output format
-        if isinstance(self.output_format, str):
-            try:
-                self.output_format = OutputMode[self.output_format].value
-            except KeyError:
-                raise ValueError('Invalid output_format property. Must be "nodeindex", "nameindex", "nodeonly" or "nameonly"')
-        else:
-            raise TypeError('Invalid output_format property type. Must be string ("nodeindex", "nameindex", "nodeonly" or "nameonly")')
+        if not isinstance(self.output_format, OutputMode):
+            raise TypeError('Invalid output_format property type. Must be of type OutputMode')
+        
+        if len(self.indicator_parentheses) != 2 or not isinstance(self.indicator_parentheses[0], str) or not isinstance(self.indicator_parentheses[1], str):
+            raise TypeError('Invalid indicator_parentheses property type. Must be a string tuple of length 2')
+        
+        self.output_format = self.output_format.value
 
         self.index = self.default_index
 

@@ -1,11 +1,17 @@
 import curses
 
 from anytree import Node, RenderTree
+
+import sys
+
+sys.path.insert(0, "../src")
+
 from pickpack import PickPacker
 
 
 def go_back(picker):
     return (None, -1)
+
 
 title = 'Please choose your favorite programming language: '
 java = Node("Java")

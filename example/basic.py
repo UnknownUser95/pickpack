@@ -1,4 +1,9 @@
 from anytree import Node, RenderTree
+
+import sys
+
+sys.path.insert(0, "../src")
+
 from pickpack import pickpack
 
 title = 'Please choose your favorite programming language: '
@@ -18,5 +23,5 @@ mul = Node("Multiparadigm", children=[js, py, php])
 root = Node("Select all", children=[fun, imp, oop, mul])
 
 options = RenderTree(root)
-option, index = pickpack(options, title, indicator='=>', default_index=2)
+option, index = pickpack(options, title, indicator='=>', default_index=2, indicator_parentheses=("{ ", " }"))
 print(option, index)

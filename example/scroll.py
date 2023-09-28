@@ -1,8 +1,13 @@
 from anytree import Node, RenderTree
+
+import sys
+
+sys.path.insert(0, "../src")
+
 from pickpack import pickpack
 
 title = 'Select:'
-children = [Node('foo.bar%s.baz'%x, index=x) for x in range(1, 71)]
+children = [Node('foo.bar%s.baz' % x, index=x) for x in range(1, 71)]
 root = Node("All", children=children)
 
 options = RenderTree(root)
